@@ -579,7 +579,8 @@
     </footer>
 
     <script>
-        function navigateTo(pageId) {
+        // Fungsi dasar untuk mengganti tampilan (menyembunyikan & menampilkan div)
+        function switchUI(pageId) {
             const pages = document.querySelectorAll('.page-section');
             pages.forEach(page => page.classList.remove('active-page'));
 
@@ -589,10 +590,18 @@
             document.getElementById(pageId).classList.add('active-page');
 
             if (pageId !== 'detail') {
-                document.getElementById('nav-' + pageId).classList.add('active');
+                const activeLink = document.getElementById('nav-' + pageId);
+                if (activeLink) activeLink.classList.add('active');
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Fungsi navigasi yang sudah ditambahkan "History API"
+        function navigateTo(pageId) {
+            switchUI(pageId);
+            // Kunci utamanya di sini: Mendaftarkan "halaman" ke history browser HP
+            history.pushState({ page: pageId }, "", "#" + pageId);
         }
 
         function openDetail(title, price, desc, category, imgSrc) {
@@ -602,17 +611,34 @@
             document.getElementById('detail-category').textContent = category;
             document.getElementById('detail-image').src = imgSrc;
 
-            const waNumber = "6285180691976"; // GANTI NOMORMU DI SINI
-            
-            // --- BAGIAN YANG DIUBAH: Menambahkan Link Gambar ---
+            const waNumber = "6285180691976"; // JANGAN LUPA GANTI NOMORMU DI SINI
             const waMessage = `Halo Admin, saya ingin order produk *${title}* dengan harga ${price}.\n\nLihat gambar produk: ${imgSrc}\n\nApakah barangnya masih ready?`;
-            // ---------------------------------------------------
-
+            
             const encodedMessage = encodeURIComponent(waMessage);
             document.getElementById('detail-wa-btn').href = `https://wa.me/${waNumber}?text=${encodedMessage}`;
 
             navigateTo('detail');
         }
+
+        // Tangkap event saat tombol "Back" di HP / Browser ditekan
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.page) {
+                switchUI(event.state.page); // Kembali ke halaman sebelumnya di dalam website
+            } else {
+                switchUI('home'); // Default jika tidak ada history
+            }
+        });
+
+        // Saat website pertama kali dimuat, atur status history awalnya
+        window.onload = function() {
+            let hash = window.location.hash.replace('#', '');
+            if (hash && document.getElementById(hash)) {
+                switchUI(hash);
+                history.replaceState({ page: hash }, "", "#" + hash);
+            } else {
+                history.replaceState({ page: 'home' }, "", "#home");
+            }
+        };
     </script>
 </body>
 </html>
